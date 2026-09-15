@@ -1,0 +1,51 @@
+name: Deploy to GitHub Pages (Manual)
+
+on:
+  # workflow_dispatch allows you to trigger this workflow manually via a button in the GitHub UI
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Clone Private Repository via SSH
+        uses: actions/checkout@v4
+        with:
+          repository: 'm1st4ck/_m1st4ck-portfolio-source-code'
+          ssh-key: ${{ secrets.ROOT_SSH_KEY }}
+
+      - name: 2. Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 3. Bundle and Minify Source Code using Vite
+        run: |
+          npm init -y
+          npm install vite --save-dev
+          npx vite build
+
+      - name: 4. Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: 5. Upload dist folder as Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+      - name: 6. Deploy bundled site to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
