@@ -31,34 +31,10 @@ jobs:
         with:
           node-version: 20
 
-      - name: Build and Minify Site Assets
+      - name: Obfuscate and Build Site Assets
         run: |
-          mkdir -p dist
-          
-          cp -r audio css images js journeys index.html dist/
-          
-          npm init -y
-          npm install terser clean-css-cli html-minifier-terser
-          
-          echo "Minifying JS..."
-          find dist -type f -name "*.js" | while read -r f; do
-            npx terser "$f" -o "$f" --compress --mangle
-          done
-          
-          echo "Minifying CSS..."
-          find dist -type f -name "*.css" | while read -r f; do
-            npx cleancss -o "$f" "$f"
-          done
-          
-          echo "Minifying HTML..."
-          find dist -type f -name "*.html" | while read -r f; do
-            npx html-minifier-terser \
-              --collapse-whitespace \
-              --remove-comments \
-              --minify-js true \
-              --minify-css true \
-              "$f" -o "$f"
-          done
+          npm install -g terser
+          python obfuscate-web.py --no-rename-map-json
 
       - name: Setup SSH Deploy Key
         uses: webfactory/ssh-agent@v0.9.0
